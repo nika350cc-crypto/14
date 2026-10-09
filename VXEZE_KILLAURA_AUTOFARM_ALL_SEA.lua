@@ -59,7 +59,7 @@ end;
 
 -- ================= CONFIG (khong GUI — sua truc tiep o day) =================
 getgenv().KA = {
-        ["Range"] = 58,      -- hitbox gui di = 58; cong them 10 + body mob -> tam that ~68-70 studs
+        ["Range"] = 80,      -- hitbox gui di = 58; cong them 10 + body mob -> tam that ~68-70 studs
         ["Delay"] = 0.08,    -- nhip danh (0.05 = nhanh nhat)
         ["Auto Haki"] = true, -- tu bat Haki Buso cho dame khi den
 }
@@ -87,17 +87,33 @@ local function IsMeleeOrSword(name)
 end
 
 -- ================= AUTO HAKI =================
-task.spawn(function()
-        while true do
-                if getgenv().KA["Auto Haki"] then
-                        pcall(function()
-                                game:GetService("ReplicatedStorage"):WaitForChild("Remotes").CommF_:InvokeServer("Buso")
-                        end)
-                end
-                task.wait(2)
-        end
-end)
+getgenv().KA["Auto Haki"] = true
 
+local hakiRequested = false
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if not getgenv().KA["Auto Haki"] then
+            hakiRequested = false
+            continue
+        end
+
+        if hakiRequested then
+            continue
+        end
+
+        local ok = pcall(function()
+            game:GetService("ReplicatedStorage")
+                :WaitForChild("Remotes")
+                :WaitForChild("CommF_")
+                :InvokeServer("Buso")
+        end)
+
+        if ok then
+            hakiRequested = true
+        end
+    end
+end)
 -- ================= MAIN LOOP — CHAY PHAT DANH LUON =================
 task.spawn(function()
         while true do
@@ -126,7 +142,7 @@ end)
 -- Tự tìm quái đang tồn tại trong map hiện tại nên không cần hard-code Sea 1/2/3.
 -- Nhân vật được giữ ở phía trên đầu quái, tránh bị cắm xuống đất.
 getgenv().KA["Auto Farm Level"] = true
-getgenv().KA["Above Mob Height"] = 7
+getgenv().KA["Above Mob Height"] = 20
 getgenv().KA["Farm Radius"] = 450
 getgenv().KA["Farm Smooth"] = false
 
